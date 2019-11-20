@@ -10,6 +10,7 @@ require_once 'configuration.php';
 require_once 'requirements.php';
 
 if(zkapi_requirements()) {
+    require_once 'admin/edit-post-type.php';
     require_once 'acf/field-options.php';
     require_once 'users/user-roles.php';
 
