@@ -100,10 +100,12 @@ class ZKAPI_ACF_Helpers {
     public function format_acf_field_repeater($field_value, $acf_field) {
         $repeater = $field_value;
         $array    = [];
-        foreach ($repeater as $key => $repeater_item) {
-            foreach ($repeater_item as $subfield_name => $subfield_value) {
-                $subfield_data               = $this->get_acf_subfield_by_name($subfield_name, $acf_field['sub_fields']);
-                $array[$key][$subfield_name] = $this->format_field_by_type($subfield_value, $subfield_data['type'], $subfield_data);
+        if(is_array($repeater)){
+            foreach ($repeater as $key => $repeater_item) {
+                foreach ($repeater_item as $subfield_name => $subfield_value) {
+                    $subfield_data               = $this->get_acf_subfield_by_name($subfield_name, $acf_field['sub_fields']);
+                    $array[$key][$subfield_name] = $this->format_field_by_type($subfield_value, $subfield_data['type'], $subfield_data);
+                }
             }
         }
         return apply_filters('zkapi_render_field_repeater', $array, $acf_field);
