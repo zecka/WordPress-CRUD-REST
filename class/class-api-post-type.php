@@ -160,8 +160,8 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'id'       => get_the_id(),
             'title'    => get_the_title(),
             'slug'     => $post->post_name,
-            'created'  => get_the_date('c'),
-            'modified' => get_the_modified_time('c'),
+            'created'  => get_the_date(zkapi_datetime_format()),
+            'modified' => get_the_modified_time(zkapi_datetime_format()),
             'content'  => get_the_content(),
             'acf'      => null,
         ];

@@ -24,7 +24,7 @@ class ZKAPI_UserItem extends ZKAPI_ACF_Helpers {
             'display_name'    => $user->data->display_name,
             'slug'            => $user->data->user_nicename,
             'email'           => $user->data->user_email,
-            'registered_date' => $dateTime->format('c'),
+            'registered_date' => $dateTime->format(zkapi_datetime_format()),
             'acf'             => $this->get_acf_fields(),
             'posts'           => $this->get_all_posts(),
         ];
