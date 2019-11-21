@@ -25,6 +25,11 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         add_action('rest_api_init', array($this, 'register_rest_fields'));
         add_action('rest_api_init', [$this, 'register_rest_routes']);
     }
+    /**
+     * Define post type relation based on acf relationship and post_object fields
+     *
+     * @return void
+     */
     public function define_relations(){
         $p_factory = ZKAPI_PostTypeFactory::getInstance();
         foreach ($p_factory->get_relations() as $relations) {
@@ -44,7 +49,11 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
     public function register_fields($fields = []) {
         $this->fields = array_merge($this->_acf_fields, $fields);
     }
-
+    /**
+     * Set acf fields attached to this post type
+     *
+     * @return void
+     */
     private function __set_default_fields() {
         $this->_acf_fields = $this->_get_fields_by('post_type', $this->_post_type);
     }
@@ -128,6 +137,12 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'posts_per_page' => 10,
             'paged'          => 1,
         ];
+
+        // Apply filter on query for all post types
+        $args = apply_filters('zkapi_query_args_archive', $args);
+        // Apply filter on query for specific post type
+        $args = apply_filters('zkapi_query_args_archive_'.$this->_post_type, $args);
+
         $the_query = new WP_Query($args);
         $response  = [];
         if ($the_query->have_posts()):
@@ -163,6 +178,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'created'  => get_the_date(zkapi_datetime_format()),
             'modified' => get_the_modified_time(zkapi_datetime_format()),
             'content'  => get_the_content(),
+            'post_type'     => $this->_post_type,
             'acf'      => null,
         ];
         if(post_type_supports($this->_post_type, 'comments')){
@@ -182,7 +198,10 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         }
 
         $response = $this->get_item_relations($response);
-        return $response;
+
+        $response = apply_filters('zkapi_item_response', $response, $single);
+
+        return apply_filters('zkapi_item_response_'.$this->_post_type, $response, $single);
     }
     public function get_item_comments(){
         $comments_objects = get_comments([

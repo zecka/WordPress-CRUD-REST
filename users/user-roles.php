@@ -41,8 +41,7 @@ function hide_admin_bar() {
     $user  = wp_get_current_user();
     $roles = (array)$user->roles;
     $api_roles = zkapi_get_roles(false);
-
-    if ( isset($roles[0]) && in_array($roles[0], $api_roles)) {
+    if ( (isset($roles[0]) && in_array($roles[0], $api_roles)) || !is_user_logged_in()) {
         return false;
     }else{
         return true;

@@ -5,16 +5,18 @@ class ZKAPI_CommentItem{
         $this->comment = $comment;
     }
     public function api_return(){
-        $user = get_user_by('id', $this->comment->user_id);
         $metas = get_comment_meta($this->comment->comment_ID);
         $comment =  [
             'id'          => $this->comment->comment_ID,
-            'author_name' => $user->display_name,
-            'author_pic'  => $this->get_author_pic($user),
             'content'     => $this->comment->comment_content,
             'date'        => $this->comment->comment_date,
             'rating'      => null
         ];
+        $user = get_user_by('id', $this->comment->user_id);
+        if($user){
+            $comment['author_name'] = $user->display_name;
+            $comment['author_pic']  = $this->get_author_pic($user);
+        }
         if(isset($metas['rating'][0])){
             $comment['rating'] = (float) $metas['rating'][0];
         }
