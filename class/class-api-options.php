@@ -5,7 +5,7 @@ class ZKAPI_ApiOptions extends ZKAPI_ACF_Helpers{
     function __construct(){
         $this->_post_type = 'option';
         $this->set_default_fields();
-        add_action( 'rest_api_init', array($this, 'register_rest_fields') );
+        // add_action( 'rest_api_init', array($this, 'register_rest_fields') );
         add_action('rest_api_init', [$this, 'wp_rest_endpoints']);
     }
 

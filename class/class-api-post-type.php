@@ -9,20 +9,10 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
     public function __construct($name) {
         $this->_post_type = $name;
         $this->__set_default_fields();
-        /*
-        if ($name == 'page') {
-            add_action('rest_api_init', array($this, 'register_template_fields'));
-            add_filter("rest_prepare_page", [$this, 'rest_pre_insert_page'], 10, 3);
-        }
-        add_action('rest_insert_' . $this->_post_type, array($this, 'update_files_field'), 10, 3);
-        add_filter('rest_work_query', [$this, 'filter_query'], 10, 2);
-        */
     }
     public function render(){
         $this->define_relations();
         $this->__set_default_fields();
-
-        add_action('rest_api_init', array($this, 'register_rest_fields'));
         add_action('rest_api_init', [$this, 'register_rest_routes']);
     }
     /**
@@ -40,14 +30,30 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             }
         }
     }
+
+    /**
+     * Get post type relations
+     *
+     * @return array
+     */
+    public function get_relations(){
+        return $this->_relations;
+    }
+    /**
+     * Get acf fields array attached to this post type
+     *
+     * @return array
+     */
     public function get_acf_fields(){
         return $this->_acf_fields;
     }
+    /**
+     * Get current post type
+     *
+     * @return string $post_type
+     */
     public function get_post_type(){
         return $this->_post_type;
-    }
-    public function register_fields($fields = []) {
-        $this->fields = array_merge($this->_acf_fields, $fields);
     }
     /**
      * Set acf fields attached to this post type
@@ -58,52 +64,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         $this->_acf_fields = $this->_get_fields_by('post_type', $this->_post_type);
     }
 
-    public function filter_query($args, $request) {
-        if (isset($_GET['author'])) {
-            $args['author__in'] = $_GET['author'];
-        }
-        if (isset($_GET['author_name'])) {
-            $args['author_name'] = $_GET['author_name'];
-        }
-        return $args;
-    }
-    /**
-     * Register field attached to specific template
-     *
-     * @return void
-     */
-    public function register_template_fields() {
-        register_rest_field($this->_post_type, 'template_fields', array(
-            'get_callback' => array($this, 'get_template_fields'),
-        )
-        );
-    }
-
-    public function get_template_fields($post_object, $field_name) {
-        $acf_fields      = $this->_get_fields_by('page_template', $post_object['template']);
-        $this->acf_field = array_merge($acf_fields, $this->_acf_fields);
-        $array           = [];
-        foreach ($acf_fields as $field) {
-            $array[$field['name']] = $this->format_field_by_type(get_field($field['name'], $post_object['id']), $field['type'], $field);
-        }
-        return $array;
-    }
-
-    public function rest_pre_insert_page($response, $post, $request) {
-        $data = $response->get_data();
-        if (isset($data['template_fields'])) {
-            $fields = $data['template_fields'];
-            unset($data['template_fields']);
-            unset($data['template']);
-            $response->set_data(
-                array_merge(
-                    $data,
-                    $fields
-                )
-            );
-        }
-        return $response;
-    }
+    
 
     public function register_rest_routes() {
         register_rest_route('zkapi/v1', '/' . $this->_post_type, array(
@@ -127,9 +88,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'callback' => [$this, 'delete_item'],
         ));
     }
-    public function add_relation($attach_to, $relation_type){
 
-    }
     public function get_archive_callback() {
         // https://gist.github.com/luetkemj/2023628
         $args = [
@@ -147,98 +106,25 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         $response  = [];
         if ($the_query->have_posts()):
             while ($the_query->have_posts()): $the_query->the_post();
-                $response[] = $this->item_get_callback();
+                global $post;
+                $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, false);
+                $response[] = $zkapi_post_type->api_return();
             endwhile;
         endif;
 
         return $response;
     }
     public function get_single_callback($data) {
-        
-
         global $post;
         $post = $this->get_post_by_slug($data['slug']);
         if(!$post){
             return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 500));
         }
-        setup_postdata($post);
-        $response = $this->item_get_callback(true);
-        wp_reset_postdata();
-        return $response;
-
+        $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
+        return $zkapi_post_type->api_return();
     }
 
-    public function item_get_callback($single = false) {
-        // Get basic field
-        $post     = get_post(get_the_id());
-        $response = [
-            'id'       => get_the_id(),
-            'title'    => get_the_title(),
-            'slug'     => $post->post_name,
-            'created'  => get_the_date(zkapi_datetime_format()),
-            'modified' => get_the_modified_time(zkapi_datetime_format()),
-            'content'  => get_the_content(),
-            'post_type'     => $this->_post_type,
-            'acf'      => null,
-        ];
-        if(post_type_supports($this->_post_type, 'comments')){
-            $response['comments'] = $this->get_item_comments();
-        }
-        foreach ($this->_acf_fields as $acf_field) {
-            $field_name = $acf_field['name'];
-            if ($single && isset($acf_field['hide_in_detail']) && $acf_field['hide_in_detail']) {
-                continue;
-            }
-
-            if (!$single && isset($acf_field['hide_in_list']) && $acf_field['hide_in_list']) {
-                continue;
-            }
-
-            $response['acf'][$field_name] = $this->get_field($response, $field_name);
-        }
-
-        $response = $this->get_item_relations($response);
-
-        $response = apply_filters('zkapi_item_response', $response, $single);
-
-        return apply_filters('zkapi_item_response_'.$this->_post_type, $response, $single);
-    }
-    public function get_item_comments(){
-        $comments_objects = get_comments([
-            'post_id' => get_the_id(),
-            'parent'  => 0,
-        ]);
-        $comments = [];
-        foreach($comments_objects as $comment_object){
-            $comment_item= new ZKAPI_CommentItem($comment_object);
-            $comments[] = $comment_item->api_return();
-        }
-        return $comments;
-
-    }
-    public function get_item_relations($response){
-        foreach($this->_relations as $relation){
-            $relation_items = get_posts(array(
-                'post_type'  => $relation['post_type'],
-                'fields' => 'ids',
-                'meta_query' => array(
-                    array(
-                        'key'     => $relation['field']['name'], // name of custom field
-                        'value'   => get_the_ID(), // matches exactly "123", not just 123. This prevents a match for "1234"
-                        'compare' => 'LIKE',
-                    ),
-                ),
-            ));
-            if($relation['relation_type']=='manytomany' || $relation['relation_type']=='manytoone'){
-                $response['relations'][$relation['post_type']] = $relation_items;
-            }else{
-                if (isset($relation_items[0])) {
-                    $response['relations'][$relation['post_type']] = $relation_items[0];
-                }
-            }
-        }
-        return $response;
-    }
+ 
     public function create_item($request) {
         $data = ZKAPI_Helpers::get_request_data($request);
         if(! isset($data['title'])){
@@ -328,11 +214,8 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         return $posts[0];
     }
     public function get_post_rest_response_by_id($id){
-        global $post;
         $post = get_post($id);
-        setup_postdata($post);
-        $response  =  $this->item_get_callback(true);
-        wp_reset_postdata();
-        return $response;
+        $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
+        return $zkapi_post_type->api_return();
     }
 }

@@ -168,30 +168,11 @@ class ZKAPI_ACF_Helpers {
             }
         }
     }
-    public function register_rest_fields() {
-        $acf_fields = $this->_acf_fields;
-        if (!isset($_GET['slug']) && count($_POST) < 1) {
-            foreach ($acf_fields as $key => $field) {
-                if (in_array($field['name'], $this->_fields_only_single)) {
-                    unset($acf_fields[$key]);
-                }
-            }
-        }
-
-        foreach ($acf_fields as $acf_field) {
-            $field = $acf_field['name'];
-            register_rest_field($this->_post_type, $field, array(
-                    'get_callback'    => array($this, 'get_field'),
-                    'update_callback' => array($this, 'update_field'),
-                )
-            );
-        }
-    }
 
     public function get_field_by_name($field_name) {
-        $found_key = array_search($field_name, array_column($this->_acf_fields, 'name'));
+        $found_key = array_search($field_name, array_column($this->get_acf_fields(), 'name'));
         if ($found_key !== false) {
-            return $this->_acf_fields[$found_key];
+            return $this->get_acf_fields()[$found_key];
         }
         return null;
     }

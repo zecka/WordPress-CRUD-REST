@@ -22,7 +22,7 @@ class ZKAPI_Helpers {
      * si elle n'existe pas encore puis la retourne.
      *
      * @param void
-     * @return Singleton
+     * @return ZKAPI_Helpers
      */
     public static function getInstance() {
 
@@ -33,10 +33,12 @@ class ZKAPI_Helpers {
         return self::$__instance;
     }
 
-    public static function test() {
-        return 'this is a test';
-    }
-
+    /**
+     * Get all permission define for zkapi
+     *
+     * @param string $permission Peromission name
+     * @return array
+     */
     public static function get_permissions($permission = null) {
         $permissions = [
             'create_user'  => ['subscriber'],
@@ -53,15 +55,37 @@ class ZKAPI_Helpers {
         return $permissions;
     }
 
+    /**
+     * Add Relation between two custom post type
+     * Note: Acf field will display only on reference
+     *
+     * @param string $post_type post type reference
+     * @param string $attach_to post type attache
+     * @param string $relation_type manytoone, onetomany or manytomany
+     * @return void
+     */
     public static function add_relation($post_type, $attach_to, $relation_type){
         $p_factory = ZKAPI_PostTypeFactory::getInstance();
         $p_factory->register_relation($post_type, $attach_to, $relation_type);
     }
 
+    /**
+     * Add post type to zkapi endpoint
+     *
+     * @param string $post_type
+     * @return void
+     */
     public static function add_post_type($post_type){
         $p_factory = ZKAPI_PostTypeFactory::getInstance();
         $p_factory->register_post_type($post_type);
     }
+
+    /**
+     * Get data parameter from WP_REST_Request object
+     *
+     * @param WP_REST_Request $request
+     * @return array
+     */
     public static function get_request_data($request){
         if($request->get_body()){
             $data =$request->get_json_params();

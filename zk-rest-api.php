@@ -21,6 +21,7 @@ if(zkapi_requirements()) {
     require_once 'class/class-mail.php';
     require_once 'class/class-api-mail-sender.php';
     require_once 'class/class-api-post-type.php';
+    require_once 'class/class-api-post-type-item.php';
     require_once 'class/class-api-post-type-factory.php';
     require_once 'class/class-api-options.php';
     require_once 'class/class-api-user.php';
