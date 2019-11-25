@@ -66,7 +66,9 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
      */
     public function api_return() : array{
         $single = $this->is_single();
+        global $post;
         $post = $this->__post;
+
         setup_postdata($post);
         $response = [
             'id'       => get_the_id(),
@@ -78,6 +80,7 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
             'post_type'=> $this->get_post_type(),
             'acf'      => null,
         ];
+
         if(post_type_supports($this->get_post_type(), 'comments')){
             $response['comments'] = $this->get_item_comments();
         }
@@ -100,9 +103,10 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
         }
 
         $response = apply_filters('zkapi_item_response', $response, $single);
-
         wp_reset_postdata();
-        return apply_filters('zkapi_item_response_'.$this->_post_type, $response, $single);
+        $response  = apply_filters('zkapi_item_response_'.$this->_post_type, $response, $single);
+
+        return $response;
     }
 
     /**
