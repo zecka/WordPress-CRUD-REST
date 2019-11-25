@@ -6,6 +6,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
     protected $_post_type;
     protected $_acf_fields;
     protected $_relations=[];
+
     public function __construct($name) {
         $this->_post_type = $name;
         $this->__set_default_fields();
@@ -126,7 +127,18 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
  
     public function create_item($request) {
+
         $data = ZKAPI_Helpers::get_request_data($request);
+
+        $allow = apply_filters('zkapi_allow_request_create', true, $data);
+        $allow = apply_filters('zkapi_allow_request_create_' . $this->_post_type, $allow, $data);
+        if ($allow !== true) {
+            return $allow;
+        }
+
+        $data = apply_filters('zkapi_prepare_data_before_create', $data);
+        $data = apply_filters('zkapi_prepare_data_before_create_'.$this->_post_type, $data);
+
         if(! isset($data['title'])){
             return new WP_Error('cant-create', __('Title is required', 'text-domain'), array('status' => 500));
         }
@@ -137,13 +149,12 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'post_author'   => 1,
         );        
         $new_post_id = wp_insert_post($args);
-
         $post = get_post($new_post_id);
         $this->update_acf_fields($post, $data);
 
         // Prepare Response
         $response = $this->get_post_rest_response_by_id($new_post_id);
-
+ 
 
         // Send response with post data
         return new WP_REST_Response($response, 200);
@@ -171,10 +182,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         $post = get_post($post->ID);
         $this->update_acf_fields($post, $data);
 
-        // Prepare Response
-        $response = $this->get_post_rest_response_by_id($post->ID);
-
-        return $response;
+        return $this->get_post_rest_response_by_id($post->ID);;
     }
     public function delete_item($request){
         $slug = $request['post_slug'];
@@ -215,6 +223,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
     }
     public function get_post_rest_response_by_id($id){
         $post = get_post($id);
+
         $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
         return $zkapi_post_type->api_return();
     }

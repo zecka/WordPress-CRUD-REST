@@ -4,7 +4,6 @@ class ZKAPI_PostTypeFactory{
     private static $__apis = [];
     private static $__relations = [];
     private static $__post_types = [];
-
     /**
      * Constructeur de la classe
      *
@@ -56,13 +55,8 @@ class ZKAPI_PostTypeFactory{
 
         foreach ( $instance->get_apis() as $api){
             foreach($api->get_acf_fields() as $field){
-                ob_start();
-                echo '<pre>'; echo print_r($field); echo '</pre>';
-                $debug = ob_get_clean();
-                if($field['type']=='relationship' || $field['type']=='post_object'){
-                    if(isset($field['relation_type'])){
-                        $instance->register_relation($api->get_post_type(),$field);
-                    }
+                if(($field['type']=='relationship' || $field['type']=='post_object') && isset($field['relation_type'])){
+                    $instance->register_relation($api->get_post_type(),$field);
                 }
             }
         }
