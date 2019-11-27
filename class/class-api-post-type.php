@@ -119,7 +119,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         global $post;
         $post = $this->get_post_by_slug($data['slug']);
         if(!$post){
-            return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 500));
+            return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 404));
         }
         $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
         return $zkapi_post_type->api_return();
@@ -130,6 +130,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
         $data = ZKAPI_Helpers::get_request_data($request);
 
+        // Filter allow_request_create must return bool or WP_Error
         $allow = apply_filters('zkapi_allow_request_create', true, $data);
         $allow = apply_filters('zkapi_allow_request_create_' . $this->_post_type, $allow, $data);
         if ($allow !== true) {
@@ -140,7 +141,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         $data = apply_filters('zkapi_prepare_data_before_create_'.$this->_post_type, $data);
 
         if(! isset($data['title'])){
-            return new WP_Error('cant-create', __('Title is required', 'text-domain'), array('status' => 500));
+            return new WP_Error('cant-create', __('Title is required', 'text-domain'), array('status' => 422));
         }
         $args = array(
             'post_type'     => $this->_post_type,
@@ -165,7 +166,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         $data = $this->get_request_data($request);
         $post = $this->get_post_by_slug($slug);
         if(!$post){
-            return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 500));
+            return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 404));
         }
         $my_post = array('ID' => $post->ID,);
         if(isset($data['title'])){
