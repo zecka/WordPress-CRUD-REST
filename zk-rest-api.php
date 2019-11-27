@@ -2,7 +2,7 @@
 /*
 Plugin Name: ZK REST API
 Author: Robin Ferrari
-Version: 1.7.2
+Version: 0.0.1
 Author URI: https://robinferrari.ch
 */
 define('ZKAPI_PATH', __FILE__);
