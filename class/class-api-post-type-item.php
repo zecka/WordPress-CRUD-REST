@@ -68,8 +68,8 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
         $single = $this->is_single();
         global $post;
         $post = $this->__post;
-
         setup_postdata($post);
+        $user = new ZKAPI_UserItem(get_user_by('id', get_the_author_ID()));
         $response = [
             'id'       => get_the_id(),
             'title'    => get_the_title(),
@@ -78,6 +78,7 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
             'modified' => get_the_modified_time(zkapi_datetime_format()),
             'content'  => get_the_content(),
             'post_type'=> $this->get_post_type(),
+            'author'   =>  $user->api_return(),
             'acf'      => null,
         ];
 
@@ -93,8 +94,8 @@ class ZKAPI_PostTypeItem extends ZKAPI_ACF_Helpers {
             if (!$single && isset($acf_field['hide_in_list']) && $acf_field['hide_in_list']) {
                 continue;
             }
-
-            $response['acf'][$field_name] = $this->get_field($response, $field_name);
+            $field_value = $this->get_field($response, $field_name);
+            $response['acf'][$field_name] = apply_filters('zkapi_acf_field_render', $field_value, $field_name, $this->_post_type);
         }
 
         $relations = $this->get_item_relations();

@@ -114,9 +114,11 @@ class ZKAPI_ACF_Helpers {
 
         $group = $field_value;
         $array = [];
-        foreach ($group as $subfield_name => $subfield_value) {
-            $subfield_data = $this->get_acf_subfield_by_name($subfield_name, $acf_field['sub_fields']);
-            $array[$subfield_name] = $this->format_field_by_type($subfield_value, $subfield_data['type'], $subfield_data);
+        if(is_array($group)){
+            foreach ($group as $subfield_name => $subfield_value) {
+                $subfield_data = $this->get_acf_subfield_by_name($subfield_name, $acf_field['sub_fields']);
+                $array[$subfield_name] = $this->format_field_by_type($subfield_value, $subfield_data['type'], $subfield_data);
+            }
         }
         return apply_filters('zkapi_render_field_group', $array, $acf_field);
     }

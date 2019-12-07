@@ -14,7 +14,9 @@ class ZKAPI_UserItem extends ZKAPI_ACF_Helpers {
     }
     private function __define_acf_fields() {
         $user_fields        = $this->usersApi->get_acf_fields();
-        $this->_acf_fields = array_merge($user_fields[$this->role], $user_fields['all']);
+        if(isset($user_fields[$this->role])){
+            $this->_acf_fields = array_merge($user_fields[$this->role], $user_fields['all']);
+        }
     }
     public function api_return() {
         $user     = $this->_user;

@@ -76,10 +76,15 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'methods'  => 'POST',
             'callback' => [$this, 'create_item'],
         ));
+        register_rest_route('zkapi/v1', '/' . $this->_post_type . '/id/(?P<id>\d+)', array(
+            'methods'  => 'GET',
+            'callback' => [$this, 'get_single_callback_by_id'],
+        ));
         register_rest_route('zkapi/v1', '/' . $this->_post_type . '/(?P<slug>\S+)', array(
             'methods'  => 'GET',
             'callback' => [$this, 'get_single_callback'],
         ));
+        
         register_rest_route('zkapi/v1', '/' . $this->_post_type . '/(?P<post_slug>\S+)', array(
             'methods'  => 'PUT',
             'callback' => [$this, 'update_item'],
@@ -119,7 +124,16 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         global $post;
         $post = $this->get_post_by_slug($data['slug']);
         if(!$post){
-            return new WP_Error('no-item-found', __('No item fund', 'text-domain'), array('status' => 404));
+            return new WP_Error('no-item-found', __('No item fund', 'zkapi'), array('status' => 404));
+        }
+        $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
+        return $zkapi_post_type->api_return();
+    }
+    public function get_single_callback_by_id($data) {
+        global $post;
+        $post = get_post($data['id']);
+        if(!$post){
+            return new WP_Error('no-item-found', __('No item fund', 'zkapi'), array('status' => 404));
         }
         $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
         return $zkapi_post_type->api_return();
@@ -127,7 +141,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
  
     public function create_item($request) {
-
+        global $_wp_post_type_features;
         $data = ZKAPI_Helpers::get_request_data($request);
 
         // Filter allow_request_create must return bool or WP_Error
@@ -139,16 +153,23 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
         $data = apply_filters('zkapi_prepare_data_before_create', $data);
         $data = apply_filters('zkapi_prepare_data_before_create_'.$this->_post_type, $data);
-
-        if(! isset($data['title'])){
-            return new WP_Error('cant-create', __('Title is required', 'text-domain'), array('status' => 422));
-        }
+        
         $args = array(
-            'post_type'     => $this->_post_type,
-            'post_title'    => wp_strip_all_tags($data['title']),
-            'post_status'   => 'publish',
-            'post_author'   => 1,
-        );        
+            'post_type'   => $this->_post_type,
+            'post_status' => 'publish',
+            'post_author' => 1,
+        );
+        // Check if post type support title
+        if( 
+            isset($_wp_post_type_features[$this->_post_type]['title']) && 
+            $_wp_post_type_features[$this->_post_type]['title']){
+            if( !isset($data['title'])){
+                return new WP_Error('cant-create', __('Title is required', 'text-domain'), array('status' => 422));
+            }else{
+                $args['post_title'] =  wp_strip_all_tags($data['title']);
+            }
+        }
+                
         $new_post_id = wp_insert_post($args);
         $post = get_post($new_post_id);
         $this->update_acf_fields($post, $data);
