@@ -30,10 +30,13 @@ class ZKAPI_ACF_Helpers {
     public function format_field_by_type($field_value, $type, $acf_field = null) {
         switch ($type) {
         case 'image':
-            return $this->format_acf_field_text($field_value, $acf_field);
+            return $this->format_acf_field_image($field_value, $acf_field);
+            break;
+        case 'gallery':
+            return $this->format_acf_field_gallery($field_value, $acf_field);
             break;
         case 'text':
-            return $this->format_acf_field_image($field_value, $acf_field);
+            return $this->format_acf_field_text($field_value, $acf_field);
             break;
         case 'number':
             return $this->format_acf_field_number($field_value, $acf_field);
@@ -111,7 +114,6 @@ class ZKAPI_ACF_Helpers {
         return apply_filters('zkapi_render_field_repeater', $array, $acf_field);
     }
     public function format_acf_field_group($field_value, $acf_field) {
-
         $group = $field_value;
         $array = [];
         if(is_array($group)){
@@ -123,16 +125,16 @@ class ZKAPI_ACF_Helpers {
         return apply_filters('zkapi_render_field_group', $array, $acf_field);
     }
     public function format_acf_field_google_map($field_value, $acf_field){
-        return apply_filters('zkapi_render_google_map', $field_value, $acf_field);
+        return apply_filters('zkapi_render_field_google_map', $field_value, $acf_field);
     }
     public function format_acf_field_textarea($field_value, $acf_field) {
-        return apply_filters('zkapi_render_textarea', $field_value, $acf_field);
+        return apply_filters('zkapi_render_field_textarea', $field_value, $acf_field);
     }
     public function format_acf_field_select($field_value, $acf_field) {
-        return apply_filters('zkapi_render_select', $field_value, $acf_field);
+        return apply_filters('zkapi_render_field_select', $field_value, $acf_field);
     }
     public function format_acf_field_text($field_value, $acf_field) {
-        return apply_filters('zkapi_render_text', $field_value, $acf_field);
+        return apply_filters('zkapi_render_field_text', $field_value, $acf_field);
     }
     public function format_acf_field_default($field_value, $acf_field) {
         return apply_filters('zkapi_render_field_'.$acf_field['type'], $field_value, $acf_field);

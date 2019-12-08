@@ -34,6 +34,9 @@ class ZKAPI_UserItem extends ZKAPI_ACF_Helpers {
 
     public function get_acf_fields() {
         $fields = [];
+        if(!is_array($this->_acf_fields)){
+            return $fields;
+        } 
         foreach($this->_acf_fields as $field){
             $fields[$field['name']] = $this->get_field(["ID"=>$this->_user->ID], $field['name']);
         }
