@@ -30,6 +30,7 @@ if(zkapi_requirements()) {
     require_once 'class/class-api-user-registration.php';
     require_once 'class/class-api-comments.php';
     require_once 'class/class-api-comment-item.php';
+    require_once 'class/class-google-auth.php';
     require_once 'class/page-on-the-fly.php';
     // require_once 'acf/on-save-relation.php';
 

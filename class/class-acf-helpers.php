@@ -331,4 +331,16 @@ class ZKAPI_ACF_Helpers {
         }
     }
 
+    public function update_user_additional_fields($user, $parameters, $role) {
+
+        $this->_acf_fields = $this->_get_fields_by('user_role', $role);
+        foreach ($this->_acf_fields as $acf_field) {
+            $field = $acf_field['name'];
+            if (isset($parameters[$field])) {
+                $this->update_field($parameters[$field], $user, $field);
+            }
+        }
+        return true;
+    }
+
 }

@@ -12,7 +12,7 @@ class ZKAPI_UsersRegistration extends ZKAPI_ACF_Helpers {
         add_action('user_register', [$this, 'my_user_register'], 10, 2);
         add_action('template_redirect', [$this, 'disbale_default_login_redirect']);
     }
-    public function wp_rest_user_endpoints($request) {
+    public function wp_rest_user_endpoints() {
         register_rest_route('wp/v2', 'users/register', array(
             'methods'  => 'POST',
             'callback' => [$this, 'rest_user_endpoint_handler_register'],
@@ -116,11 +116,11 @@ class ZKAPI_UsersRegistration extends ZKAPI_ACF_Helpers {
             return $error;
         }
 
-        $default_role = apply_filters('zkapi_default_role', 'subscriber' ); 
+        $default_role = apply_filters('zkapi_default_role', 'api-reader' ); 
         if (empty($role)) {
             $role = $default_role;
         } else {
-            $allowable_roles = apply_filters('zkapi_allowable_roles', ['subscriber'] );
+            $allowable_roles = apply_filters('zkapi_allowable_roles', ['api-reader'] );
             if (!in_array($role, $allowable_roles)) {
                 $role = $default_role;
             }
@@ -159,17 +159,7 @@ class ZKAPI_UsersRegistration extends ZKAPI_ACF_Helpers {
         return new WP_REST_Response($response, 123);
     }
     
-    public function update_user_additional_fields($user, $parameters, $role) {
 
-        $this->_acf_fields = $this->_get_fields_by('user_role', $role);
-        foreach ($this->_acf_fields as $acf_field) {
-            $field = $acf_field['name'];
-            if (isset($parameters[$field])) {
-                $this->update_field($parameters[$field], $user, $field);
-            }
-        }
-        return true;
-    }
 
     public function wp_authenticate_user($userdata) {
         $has_activation_status = get_field('is_activated', 'user_' . $userdata->ID);
