@@ -67,7 +67,7 @@ class ZKAPI_GoogleAuth extends ZKAPI_ACF_Helpers {
             if ($success !== true) {
                 return $success;
             }
-            $this->login_with_google($request, true);
+           return $this->login_with_google($request, true);
         } else {
             // In this case user_id is not an id but a WP_Error
             return $user_id;
@@ -111,7 +111,27 @@ class ZKAPI_GoogleAuth extends ZKAPI_ACF_Helpers {
 
     public function verify_google_integrity($request){
         // TODO: Check request with google
-        return true;
+        // https: //developers.google.com/identity/sign-in/web/backend-auth
+        $CLIENT_ID = defined('JWT_AUTH_SECRET_KEY') ? ZKAPI_GOOGLE_CLIENT_ID : false;
+        if(!$CLIENT_ID){
+            return false;
+        }
+        $id_token = $request->get_param('id_token');
+        $client  = new Google_Client(['client_id' => $CLIENT_ID]); // Specify the CLIENT_ID of the app that accesses the backend
+        $client->setAccessToken($id_token);
+        $payload = $client->verifyIdToken($id_token);
+        return ($payload);
+        
+        /*if ($payload) {
+            return true;
+            // $userid = $payload['sub'];
+            // If request specified a G Suite domain:
+            //$domain = $payload['hd'];
+        } else {
+            // Invalid ID token
+            return false;
+        }
+        */
     }
 }
 new ZKAPI_GoogleAuth();

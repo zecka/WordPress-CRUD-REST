@@ -80,6 +80,7 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
             'methods'  => 'GET',
             'callback' => [$this, 'get_single_callback_by_id'],
         ));
+
         register_rest_route('zkapi/v1', '/' . $this->_post_type . '/(?P<slug>\S+)', array(
             'methods'  => 'GET',
             'callback' => [$this, 'get_single_callback'],
@@ -91,15 +92,20 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
         ));
         register_rest_route('zkapi/v1', '/' . $this->_post_type . '/(?P<post_slug>\S+)', array(
             'methods'  => 'DELETE',
-            'callback' => [$this, 'delete_item'],
+            'callback' => [$this, 'delete_item_by_slug'],
+        ));
+        register_rest_route('zkapi/v1', '/' . $this->_post_type . '/id/(?P<id>\d+)', array(
+            'methods'  => 'DELETE',
+            'callback' => [$this, 'delete_item_by_id'],
         ));
     }
 
     public function get_archive_callback() {
         // https://gist.github.com/luetkemj/2023628
+        $post_per_pages = -1;
         $args = [
             'post_type'      => $this->_post_type,
-            'posts_per_page' => 10,
+            'posts_per_page' => apply_filters('zkapi_posts_per_page', $post_per_pages),
             'paged'          => 1,
         ];
 
@@ -153,11 +159,12 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
         $data = apply_filters('zkapi_prepare_data_before_create', $data);
         $data = apply_filters('zkapi_prepare_data_before_create_'.$this->_post_type, $data);
+
         
         $args = array(
             'post_type'   => $this->_post_type,
             'post_status' => 'publish',
-            'post_author' => 1,
+            'post_author' => get_current_user_id(),
         );
         // Check if post type support title
         if( 
@@ -206,18 +213,25 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
 
         return $this->get_post_rest_response_by_id($post->ID);;
     }
-    public function delete_item($request){
+    public function delete_item_by_slug($request){
         $slug = $request['post_slug'];
         $post = $this->get_post_by_slug($slug);
         // Todo check if current user is owner of post
-        $success = wp_delete_post($post->ID);
-        if($success){
+        return $this->delete_item($post->ID);
+    }
+    public function delete_item_by_id($request){
+        $id = $request['id'];
+        return $this->delete_item($id);
+    }
+    public function delete_item($id){
+        $success = wp_delete_post($id);
+        if ($success) {
             return wp_send_json_success();
-        }else{
+        } else {
             return wp_send_json_error();
         }
-
     }
+
     public function update_acf_fields($post, $data){
         // UPDATE ACF FIELDS
         foreach ($this->_acf_fields as $acf_field) {
@@ -245,7 +259,6 @@ class ZKAPI_PostType extends ZKAPI_ACF_Helpers {
     }
     public function get_post_rest_response_by_id($id){
         $post = get_post($id);
-
         $zkapi_post_type = new ZKAPI_PostTypeItem($post, $this, true);
         return $zkapi_post_type->api_return();
     }
