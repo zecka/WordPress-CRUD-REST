@@ -30,47 +30,50 @@ class ZKAPI_ACF_Helpers {
     public function format_field_by_type($field_value, $type, $acf_field = null) {
         switch ($type) {
         case 'image':
-            return $this->format_acf_field_image($field_value, $acf_field);
+            $formated =  $this->format_acf_field_image($field_value, $acf_field);
             break;
         case 'gallery':
-            return $this->format_acf_field_gallery($field_value, $acf_field);
+            $formated = $this->format_acf_field_gallery($field_value, $acf_field);
             break;
         case 'text':
-            return $this->format_acf_field_text($field_value, $acf_field);
+            $formated = $this->format_acf_field_text($field_value, $acf_field);
             break;
         case 'number':
-            return $this->format_acf_field_number($field_value, $acf_field);
+            $formated = $this->format_acf_field_number($field_value, $acf_field);
             break;
         case 'textarea':
-            return $this->format_acf_field_textarea($field_value, $acf_field);
+            $formated = $this->format_acf_field_textarea($field_value, $acf_field);
             break;
         case 'date_time_picker':
-            return $this->format_acf_field_date_time($field_value, $acf_field);
+            $formated = $this->format_acf_field_date_time($field_value, $acf_field);
             break;
         case 'true_false':
-            return $this->format_acf_field_boolean($field_value, $acf_field);
+            $formated = $this->format_acf_field_boolean($field_value, $acf_field);
             break;
         case 'flexible_content':
-            return $this->format_acf_field_flexible($field_value, $acf_field);
+            $formated = $this->format_acf_field_flexible($field_value, $acf_field);
             break;
         case 'select':
-            return $this->format_acf_field_select($field_value, $acf_field);
+            $formated = $this->format_acf_field_select($field_value, $acf_field);
             break;
         case 'group':
-            return $this->format_acf_field_group($field_value, $acf_field);
+            $formated = $this->format_acf_field_group($field_value, $acf_field);
             break;
         case 'repeater':
-            return $this->format_acf_field_repeater($field_value, $acf_field);
+            $formated = $this->format_acf_field_repeater($field_value, $acf_field);
             break;
         case 'gallery':
-            return $this->format_acf_field_gallery($field_value, $acf_field);
+            $formated = $this->format_acf_field_gallery($field_value, $acf_field);
             break;
         case 'google_map':
-            return $this->format_acf_field_google_map($field_value, $acf_field);
+            $formated = $this->format_acf_field_google_map($field_value, $acf_field);
             break;
         default:
-            return $this->format_acf_field_default($field_value, $acf_field);
+            $formated = $this->format_acf_field_default($field_value, $acf_field);
         }
+  
+        $formated = apply_filters('zkapi_render_field', $formated, $acf_field);
+        return apply_filters('zkapi_render_field__'.$acf_field['name'], $formated, $acf_field);
 
     }
     public function format_acf_field_date_time($field_value, $acf_field) {
@@ -91,8 +94,12 @@ class ZKAPI_ACF_Helpers {
                     }
 
                     $subfield_data                     = $this->get_acf_flexible_subfield_by_name($flexible_item['acf_fc_layout'], $field_name, $acf_field['layouts']);
-                    $array[$key]['props'][$field_name] = $this->format_field_by_type($field, $subfield_data['type'], $subfield_data);
+                    if(isset($array[$key]['props'])){
+                        $array[$key]['props'][$field_name] = $this->format_field_by_type($field, $subfield_data['type'], $subfield_data);
+                    }
+                    
                 }
+                $array[$key] = apply_filters('zkapi_render_field_flexible_component', $array[$key], $flexible_item['acf_fc_layout']);
             }
             $render = $array;
         }
